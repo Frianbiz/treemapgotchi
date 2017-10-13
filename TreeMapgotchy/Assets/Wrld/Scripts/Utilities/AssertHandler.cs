@@ -11,15 +11,12 @@ namespace Wrld
 {
     public class AssertHandler
     {
-        public delegate void HandleAssertCallback(IntPtr message, IntPtr file, int line);
+        public delegate void HandleAssertCallback([MarshalAs(UnmanagedType.LPStr)] string message, [MarshalAs(UnmanagedType.LPStr)] string file, int line);
 
         [MonoPInvokeCallback(typeof(HandleAssertCallback))]
-        public static void HandleAssert(IntPtr message, IntPtr file, int line)
+        public static void HandleAssert([MarshalAs(UnmanagedType.LPStr)] string message, [MarshalAs(UnmanagedType.LPStr)] string file, int line)
         {
-            var output = Marshal.PtrToStringAnsi(message);
-            var fileName = Marshal.PtrToStringAnsi(file);
-
-            Debug.Log(string.Format("Wrld ASSERT {0} ({1}): {2}", fileName, line, output));
+            Debug.LogErrorFormat("Wrld ASSERT {0} ({1}): {2}", file, line, message);
 
 #if UNITY_EDITOR
             EditorApplication.isPlaying = false;

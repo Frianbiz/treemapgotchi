@@ -11,7 +11,7 @@ namespace Wrld
         public float farClipPlaneDistance;
         public float fieldOfViewDegrees;
         public float aspect;
-        public float tiltDegrees;
+        public float pitchDegrees;
         public float distanceToInterestPoint;
         public DoubleVector3 originECEF;
         public DoubleVector3 interestPointECEF;

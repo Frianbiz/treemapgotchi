@@ -31,7 +31,7 @@ namespace Wrld
             state.ProjectMatrix = Matrix4x4.identity;
             state.ViewMatrix = Matrix4x4.identity;
 
-            var isZeroBased = zeroBasedCameraECEF.transform.localPosition.sqrMagnitude == 0.0f;
+            var isZeroBased = zeroBasedCameraECEF.transform.position.sqrMagnitude < 0.000001f;
             var hasNonzeroSize = zeroBasedCameraECEF.orthographicSize > 0;
 
             if (!isZeroBased)

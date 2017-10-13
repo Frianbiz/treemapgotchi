@@ -18,6 +18,7 @@ namespace Wrld.Space
         {
             var cameraRelativePosition = (objectOriginECEF - m_cameraPositionECEF).ToSingleVector();
             objectTransform.localPosition = cameraRelativePosition + m_up * heightOffset;
+            objectTransform.localRotation = Quaternion.identity;
         }
     }
 }

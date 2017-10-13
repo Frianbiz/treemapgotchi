@@ -8,10 +8,8 @@ namespace Wrld.Materials
 {
     public class MaterialRepository
     {
-        public delegate void ApplyTextureToMaterialCallback(IntPtr materialName, uint textureID);
-
         public MaterialRepository(string materialsDirectory, Material defaultLandmarkMaterial, TextureLoadHandler textureLoadHandler)
-        {
+        { 
             m_materialDirectory = materialsDirectory;
             m_materials = new Dictionary<string, MaterialRecord>();
             m_defaultMaterial = defaultLandmarkMaterial == null ? LoadPlaceHolderMaterial("placeholder") : defaultLandmarkMaterial;
@@ -180,9 +178,10 @@ namespace Wrld.Materials
             }
             else
             {
-                Debug.LogWarning(string.Format("material {0} was not present!", materialName));
+                Debug.LogWarningFormat("material {0} was not present", materialName);
             }
         }
+
         struct ApplyTextureToMaterialRequest
         {
             public string MaterialName { get; set; }

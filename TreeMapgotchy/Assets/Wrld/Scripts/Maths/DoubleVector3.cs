@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 namespace Wrld.Common.Maths
 {
@@ -8,6 +9,7 @@ namespace Wrld.Common.Maths
     /// Representation of 3 component (3D) vector and points in double precision required for dealing with very large scale precision.
     /// </summary>
     [DebuggerDisplay("{x}, {y}, {z}")]
+    [StructLayout(LayoutKind.Sequential)]
     public struct DoubleVector3 : IEquatable<DoubleVector3>
     {
         private const string StringFormat = "{0},{1},{2}";

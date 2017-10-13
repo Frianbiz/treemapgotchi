@@ -195,7 +195,6 @@ public class CopyPlatformResources : Editor
             case RuntimePlatform.WindowsPlayer:
                 CopyResourcesWin();
                 break;
-            case RuntimePlatform.OSXDashboardPlayer:
             case RuntimePlatform.OSXEditor:
             case RuntimePlatform.OSXPlayer:
                 CopyResourcesOSX();
@@ -283,4 +282,6 @@ public class CopyPlatformResources : Editor
 
         Debug.Log("WRLD platform is setup and ready to use");
     }
+
+
 }

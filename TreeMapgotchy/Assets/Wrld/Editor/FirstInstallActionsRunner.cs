@@ -79,7 +79,7 @@ public class FirstInstallActionsRunner : Editor
     {
         const string WelcomeGuardFile = "Assets/Wrld/Version/WelcomeConfig.txt";
         const string ShadowGuardFile = "Assets/Wrld/Version/ShadowConfig.txt";
-        
+
         if (!UnityEditorInternal.InternalEditorUtility.inBatchMode)
         {
             if (!File.Exists(WelcomeGuardFile))

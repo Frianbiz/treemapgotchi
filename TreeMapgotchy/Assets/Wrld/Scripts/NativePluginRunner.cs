@@ -3,6 +3,7 @@ using Wrld.MapCamera;
 using Wrld.Materials;
 using Wrld.Meshes;
 using Wrld.Space;
+using Wrld.Concurrency;
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -37,6 +38,8 @@ namespace Wrld
             TextureLoadHandler.AllocateTextureBufferCallback allocateTextureBuffer,
             TextureLoadHandler.BeginUploadTextureBufferCallback beginUploadTextureBuffer,
             TextureLoadHandler.ReleaseTextureCallback releaseTexture,
+            ThreadService.CreateThreadDelegate createThread,
+            ThreadService.JoinThreadDelegate joinThread,
             [MarshalAs(UnmanagedType.LPStr)]string coverageTreeUrl,
             [MarshalAs(UnmanagedType.LPStr)]string themeUrl
             );
@@ -77,11 +80,16 @@ namespace Wrld
             return path;
         }
 
-        public NativePluginRunner(string apiKey, Transform parentForStreamedObjects, ConfigParams config)
+
+        public NativePluginRunner(string apiKey, TextureLoadHandler textureLoadHandler, MaterialRepository materialRepository, MapGameObjectScene mapGameObjectScene, ConfigParams config)
         {
-            m_textureLoadHandler = new TextureLoadHandler();
-            m_materialRepository = new MaterialRepository(config.MaterialsDirectory, config.OverrideLandmarkMaterial, m_textureLoadHandler);
-            m_mapGameObjectScene = new MapGameObjectScene(m_materialRepository, parentForStreamedObjects, config.Collisions);
+            // Initialize singleton - this is creepy and should be scheduled as debt
+            // Deliberately not assigning it to keep warnings out of the Unity console
+            new ThreadService();
+
+            m_textureLoadHandler = textureLoadHandler;
+            m_materialRepository = materialRepository;
+            m_mapGameObjectScene = mapGameObjectScene;
             m_streamingUpdater = new StreamingUpdater();
 
             var nativeConfig = config.GetNativeConfig();
@@ -101,6 +109,8 @@ namespace Wrld
                 new TextureLoadHandler.AllocateTextureBufferCallback(TextureLoadHandler.AllocateTextureBuffer), 
                 new TextureLoadHandler.BeginUploadTextureBufferCallback(TextureLoadHandler.BeginUploadTextureBuffer), 
                 new TextureLoadHandler.ReleaseTextureCallback(TextureLoadHandler.ReleaseTexture),
+                new ThreadService.CreateThreadDelegate(ThreadService.CreateThread),
+                new ThreadService.JoinThreadDelegate(ThreadService.JoinThread),
                 config.CoverageTreeManifestUrl,
                 config.ThemeManifestUrl
                 );
@@ -113,7 +123,6 @@ namespace Wrld
 
         public void StreamResourcesForCamera(UnityEngine.Camera zeroBasedCameraECEF, DoubleVector3 cameraOriginECEF, DoubleVector3 interestPointECEF)
         {
-            Debug.Assert(zeroBasedCameraECEF.transform.position.sqrMagnitude == 0.0f);
             m_streamingUpdater.Update(zeroBasedCameraECEF, cameraOriginECEF, interestPointECEF);
         }
 
@@ -131,6 +140,11 @@ namespace Wrld
         public void UpdateTransforms(ITransformUpdateStrategy transformUpdateStrategy)
         {
             m_mapGameObjectScene.UpdateTransforms(transformUpdateStrategy);
+        }
+
+        public void UpdateCollisions(ConfigParams.CollisionConfig collisions)
+        {
+            m_mapGameObjectScene.ChangeCollision(collisions);
         }
 
         public void OnDestroy()

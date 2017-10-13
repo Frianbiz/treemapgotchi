@@ -37,7 +37,6 @@ namespace Wrld.Space
 
         private void SetCentralPoint(DoubleVector3 ecefOrigin, LatLongAltitude latLongAltOrigin)
         {
-            m_originLatLongAlt = latLongAltOrigin;
             m_originECEF = ecefOrigin;
 
             var upEcef = m_originECEF.normalized;
@@ -72,7 +71,6 @@ namespace Wrld.Space
             return ECEFToLocalSpace(latLongAlt.ToECEF());
         }
 
-        private LatLongAltitude m_originLatLongAlt;
         private DoubleVector3 m_originECEF;
         private Vector3 m_upECEF;
         private Vector3 m_rightECEF;

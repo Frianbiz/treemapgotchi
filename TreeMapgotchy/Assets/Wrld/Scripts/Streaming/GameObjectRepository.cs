@@ -30,13 +30,18 @@ namespace Wrld.Streaming
 
         public void Add(string id, DoubleVector3 originEcef, GameObject[] gameObjects)
         {
-            if(m_gameObjectsById.ContainsKey(id))
+            if (Contains(id))
             {
                 return; // :TODO: fix
             }
 
             var record = new GameObjectRecord { OriginECEF = originEcef, GameObjects = gameObjects };
             m_gameObjectsById.Add(id, record);
+        }
+
+        public bool Contains(string id)
+        {
+            return m_gameObjectsById.ContainsKey(id);
         }
 
         public bool Remove(string id)

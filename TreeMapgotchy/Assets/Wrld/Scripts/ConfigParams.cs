@@ -18,6 +18,7 @@ namespace Wrld
             public double m_longitudeDegrees;
             public double m_distanceToInterest;
             public double m_headingDegrees;
+            public bool m_streamingLodBasedOnDistance;
         }
 
         NativeConfig m_nativeConfig;
@@ -65,6 +66,15 @@ namespace Wrld
         {
             get { return m_nativeConfig.m_headingDegrees; }
             set { m_nativeConfig.m_headingDegrees = value; }
+        }
+
+        /// <summary>
+        /// Whether to determine streaming LOD based on distance, instead of altitude.
+        /// </summary>
+        public bool StreamingLodBasedOnDistance
+        {
+            get { return m_nativeConfig.m_streamingLodBasedOnDistance; }
+            set { m_nativeConfig.m_streamingLodBasedOnDistance = value; }
         }
 
         /// <summary>
@@ -132,6 +142,7 @@ namespace Wrld
             config.LongitudeDegrees = -122.468385;
             config.DistanceToInterest = 1781.0;
             config.HeadingDegrees = 0.0;
+            config.StreamingLodBasedOnDistance = false;
 
             config.MaterialsDirectory = "WrldMaterials/";
             config.OverrideLandmarkMaterial = null;

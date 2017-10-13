@@ -41,6 +41,10 @@ public class WrldMap : MonoBehaviour
     [SerializeField]
     private CoordinateSystem m_coordSystem = CoordinateSystem.UnityWorld;
 
+    [Tooltip("Whether to determine streaming LOD based on distance, instead of altitude")]
+    [SerializeField]
+    private bool m_streamingLodBasedOnDistance = false;
+
     [Header("Theme Settings")]
     [Tooltip("Directory within the Resources folder to look for materials during runtime. Default is provided with the package")]
     [SerializeField]
@@ -71,16 +75,56 @@ public class WrldMap : MonoBehaviour
 
     void Awake()
     {
-        var defaultConfig = ConfigParams.MakeDefaultConfig();
-        defaultConfig.DistanceToInterest = m_distanceToInterest;
-        defaultConfig.LatitudeDegrees = m_latitudeDegrees;
-        defaultConfig.LongitudeDegrees = m_longitudeDegrees;
-        defaultConfig.HeadingDegrees = m_headingDegrees;
-        defaultConfig.MaterialsDirectory = m_materialDirectory;
-        defaultConfig.OverrideLandmarkMaterial = m_overrideLandmarkMaterial;
-        defaultConfig.Collisions.TerrainCollision = m_terrainCollisions;
-        defaultConfig.Collisions.RoadCollision = m_roadCollisions;
-        defaultConfig.Collisions.BuildingCollision = m_buildingCollisions;
+        SetupApi();
+    }
+
+    void OnEnable()
+    {
+        if (Api.Instance == null)
+        {
+            SetupApi();
+        }
+
+        m_api.SetEnabled(true);
+    }
+
+    void OnDisable()
+    {
+        m_api.SetEnabled(false);
+    }
+
+    string GetApiKey()
+    {
+        if (APIKeyHelpers.AppearsValid(m_apiKey))
+        {
+            APIKeyHelpers.CacheAPIKey(m_apiKey);
+        }
+        else
+        {
+            var cachedAPIKey = APIKeyHelpers.GetCachedAPIKey();
+
+            if (cachedAPIKey != null)
+            {
+                m_apiKey = cachedAPIKey;
+            }
+        }
+
+        return m_apiKey;
+    }
+
+    void SetupApi()
+    {
+        var config = ConfigParams.MakeDefaultConfig();
+        config.DistanceToInterest = m_distanceToInterest;
+        config.LatitudeDegrees = m_latitudeDegrees;
+        config.LongitudeDegrees = m_longitudeDegrees;
+        config.HeadingDegrees = m_headingDegrees;
+        config.StreamingLodBasedOnDistance = m_streamingLodBasedOnDistance;
+        config.MaterialsDirectory = m_materialDirectory;
+        config.OverrideLandmarkMaterial = m_overrideLandmarkMaterial;
+        config.Collisions.TerrainCollision = m_terrainCollisions;
+        config.Collisions.RoadCollision = m_roadCollisions;
+        config.Collisions.BuildingCollision = m_buildingCollisions;
 
         Transform rootTransform = null;
 
@@ -91,17 +135,17 @@ public class WrldMap : MonoBehaviour
 
         try
         {
-            Api.Create(m_apiKey, m_coordSystem, rootTransform, defaultConfig);
+            Api.Create(GetApiKey(), m_coordSystem, rootTransform, config);
         }
         catch (InvalidApiKeyException)
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             EditorUtility.DisplayDialog(
                 "Error: Invalid WRLD API Key",
                 string.Format("Please enter a valid WRLD API Key (see the WrldMap script on GameObject \"{0}\" in the Inspector).",
                     gameObject.name),
                 "OK");
-            #endif
+#endif
             throw;
         }
 
@@ -119,14 +163,7 @@ public class WrldMap : MonoBehaviour
         m_api.StreamResourcesForCamera(m_streamingCamera);
     }
 
-#if UNITY_EDITOR
     void OnDestroy()
-    {
-        OnApplicationQuit();
-    }
-#endif
-
-    void OnApplicationQuit()
     {
         m_api.Destroy();
     }

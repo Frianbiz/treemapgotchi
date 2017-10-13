@@ -12,54 +12,79 @@ namespace Wrld
 { 
     public class MapGameObjectScene
     {
-        public delegate void AddMeshCallback(IntPtr data);
-        public delegate void DeleteMeshCallback(IntPtr data);
-        public delegate void VisibilityCallback(IntPtr id, bool visible);
+        public delegate void AddMeshCallback([MarshalAs(UnmanagedType.LPStr)] string id);
+        public delegate void DeleteMeshCallback([MarshalAs(UnmanagedType.LPStr)] string id);
+        public delegate void VisibilityCallback([MarshalAs(UnmanagedType.LPStr)] string id, [MarshalAs(UnmanagedType.I1)] bool visible);
 
         GameObjectStreamer m_terrainStreamer;
         GameObjectStreamer m_roadStreamer;
         GameObjectStreamer m_buildingStreamer;
+        GameObjectStreamer m_highlightStreamer;
         MeshUploader m_meshUploader;
+        bool m_enabled;
+
         private static MapGameObjectScene ms_instance;
 
-        public MapGameObjectScene(MaterialRepository materialRepository, Transform parentForStreamedObjects, ConfigParams.CollisionConfig collisions)
+        public MapGameObjectScene(GameObjectStreamer terrainStreamer, GameObjectStreamer roadStreamer, GameObjectStreamer buildingStreamer, GameObjectStreamer highlightStreamer)
         {
-            m_terrainStreamer = new GameObjectStreamer("Terrain", materialRepository, parentForStreamedObjects, collisions.TerrainCollision);
-            m_roadStreamer = new GameObjectStreamer("Roads", materialRepository, parentForStreamedObjects, collisions.RoadCollision);
-            m_buildingStreamer = new GameObjectStreamer("Buildings", materialRepository, parentForStreamedObjects, collisions.BuildingCollision);
+            m_terrainStreamer = terrainStreamer;
+            m_roadStreamer = roadStreamer;
+            m_buildingStreamer = buildingStreamer;
+            m_highlightStreamer = highlightStreamer;
             m_meshUploader = new MeshUploader();
+            m_enabled = true;
             ms_instance = this;
         }
 
+        internal void SetEnabled(bool enabled)
+        {
+            m_enabled = enabled;
+        }
+
+        public void ChangeCollision(ConfigParams.CollisionConfig collisions)
+        {
+            var terrainCollision = (collisions.TerrainCollision) ? CollisionStreamingType.SingleSidedCollision : CollisionStreamingType.NoCollision;
+            var roadCollision = (collisions.RoadCollision) ? CollisionStreamingType.DoubleSidedCollision : CollisionStreamingType.NoCollision;
+            var buildingCollision = (collisions.BuildingCollision) ? CollisionStreamingType.SingleSidedCollision : CollisionStreamingType.NoCollision;
+            m_terrainStreamer.ChangeCollision(terrainCollision);
+            m_roadStreamer.ChangeCollision(roadCollision);
+            m_buildingStreamer.ChangeCollision(buildingCollision);
+        }
+        
         public void UpdateTransforms(ITransformUpdateStrategy transformUpdateStrategy)
         {
             const float roadHeightOffset = 0.1f;
             m_terrainStreamer.UpdateTransforms(transformUpdateStrategy);
             m_roadStreamer.UpdateTransforms(transformUpdateStrategy, roadHeightOffset);
             m_buildingStreamer.UpdateTransforms(transformUpdateStrategy);
+            m_highlightStreamer.UpdateTransforms(transformUpdateStrategy);
         }
 
         [MonoPInvokeCallback(typeof(DeleteMeshCallback))]
-        public static void DeleteMesh(IntPtr meshID)
+        public static void DeleteMesh([MarshalAs(UnmanagedType.LPStr)] string meshID)
         {
-            string id = Marshal.PtrToStringAnsi(meshID);
-            ms_instance.DeleteMesh(id);
+            if (ms_instance.m_enabled)
+            {
+                ms_instance.DeleteMeshInternal(meshID);
+            }
         }
 
-        void DeleteMesh(string id)
+        private void DeleteMeshInternal(string id)
         {
             var streamer = GetStreamerFromName(id);
             streamer.RemoveObjects(id);
         }
 
         [MonoPInvokeCallback(typeof(AddMeshCallback))]
-        public static void AddMesh(IntPtr meshID)
+        public static void AddMesh([MarshalAs(UnmanagedType.LPStr)] string meshID)
         {
-            string id = Marshal.PtrToStringAnsi(meshID);
-            ms_instance.AddMesh(id);
+            if (ms_instance.m_enabled)
+            {
+                ms_instance.AddMeshInternal(meshID);
+            }
         }
 
-        private void AddMesh(string id)
+        private void AddMeshInternal(string id)
         {
             Mesh[] meshes;
             DoubleVector3 originECEF;
@@ -70,16 +95,22 @@ namespace Wrld
                 var streamer = GetStreamerFromName(id);
                 streamer.AddObjectsForMeshes(meshes, originECEF, materialName);
             }
+            else
+            {
+                Debug.LogErrorFormat("ERROR: Could not get mesh for ID {0}.", id);
+            }
         }
 
         [MonoPInvokeCallback(typeof(VisibilityCallback))]
-        public static void SetVisible(IntPtr meshID, bool visible)
+        public static void SetVisible([MarshalAs(UnmanagedType.LPStr)] string meshID, [MarshalAs(UnmanagedType.I1)] bool visible)
         {
-            string id = Marshal.PtrToStringAnsi(meshID);
-            ms_instance.SetVisible(id, visible);
+            if (ms_instance.m_enabled)
+            {
+                ms_instance.SetVisibleInternal(meshID, visible);
+            }
         }
 
-        private void SetVisible(string id, bool visible)
+        private void SetVisibleInternal(string id, bool visible)
         {
             var streamer = GetStreamerFromName(id);
             streamer.SetVisible(id, visible);
@@ -102,6 +133,8 @@ namespace Wrld
                     return m_roadStreamer;
                 case 'B':
                     return m_buildingStreamer;
+                case 'H':
+                    return m_highlightStreamer;
                 default:
                     throw new ArgumentException(string.Format("Unknown streamer for name: {0}", name), "name");
             }

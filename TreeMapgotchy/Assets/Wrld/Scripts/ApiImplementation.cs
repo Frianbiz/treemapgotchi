@@ -1,8 +1,11 @@
 using UnityEngine;
 using Wrld.Common.Maths;
+using Wrld.Materials;
+using Wrld.Streaming;
 using Wrld.Space;
 using Wrld.Common.Camera;
 using Wrld.MapCamera;
+using Wrld.Resources.Buildings;
 
 namespace Wrld
 {
@@ -12,13 +15,33 @@ namespace Wrld
         private NativePluginRunner m_nativePluginRunner;
         private CoordinateSystem m_coordinateSystem;
         private CameraApi m_cameraController;
+        private BuildingsApi m_buildingsApi;
+        private GeographicApi m_geographicApi;
         private UnityWorldSpaceCoordinateFrame m_frame;
         private DoubleVector3 m_originECEF;
         private InterestPointProvider m_interestPointProvider = new InterestPointProvider();
+        private GameObjectStreamer m_terrainStreamer;
+        private GameObjectStreamer m_roadStreamer;
+        private GameObjectStreamer m_buildingStreamer;
+        private GameObjectStreamer m_highlightStreamer;
+        private MapGameObjectScene m_mapGameObjectScene;
 
         public ApiImplementation(string apiKey, CoordinateSystem coordinateSystem, Transform parentTransformForStreamedObjects, ConfigParams configParams)
         {
-            m_nativePluginRunner = new NativePluginRunner(apiKey, parentTransformForStreamedObjects, configParams);
+            var textureLoadHandler = new TextureLoadHandler();
+            var materialRepository = new MaterialRepository(configParams.MaterialsDirectory, configParams.OverrideLandmarkMaterial, textureLoadHandler);
+
+            var terrainCollision = (configParams.Collisions.TerrainCollision) ? CollisionStreamingType.SingleSidedCollision : CollisionStreamingType.NoCollision;
+            var roadCollision = (configParams.Collisions.RoadCollision) ? CollisionStreamingType.DoubleSidedCollision : CollisionStreamingType.NoCollision;
+            var buildingCollision = (configParams.Collisions.BuildingCollision) ? CollisionStreamingType.SingleSidedCollision : CollisionStreamingType.NoCollision;
+            m_terrainStreamer = new GameObjectStreamer("Terrain", materialRepository, parentTransformForStreamedObjects, terrainCollision);
+            m_roadStreamer = new GameObjectStreamer("Roads", materialRepository, parentTransformForStreamedObjects, roadCollision);
+            m_buildingStreamer = new GameObjectStreamer("Buildings", materialRepository, parentTransformForStreamedObjects, buildingCollision);
+            m_highlightStreamer = new GameObjectStreamer("Highlights", materialRepository, parentTransformForStreamedObjects, CollisionStreamingType.NoCollision);
+
+            m_mapGameObjectScene = new MapGameObjectScene(m_terrainStreamer, m_roadStreamer, m_buildingStreamer, m_highlightStreamer);
+
+            m_nativePluginRunner = new NativePluginRunner(apiKey, textureLoadHandler, materialRepository, m_mapGameObjectScene, configParams);
             m_coordinateSystem = coordinateSystem;
             var defaultStartingLocation = LatLongAltitude.FromDegrees(
                 configParams.LatitudeDegrees, 
@@ -35,6 +58,8 @@ namespace Wrld
             }
 
             m_cameraController = new CameraApi(this);
+            m_buildingsApi = new BuildingsApi(m_highlightStreamer);
+            m_geographicApi = new GeographicApi();
         }
 
         public void SetOriginPoint(LatLongAltitude lla)
@@ -66,12 +91,12 @@ namespace Wrld
             CameraHelpers.CalculateLookAt(
                 interestBasis.PointEcef,
                 interestBasis.Forward,
-                nativeCameraState.tiltDegrees * Mathf.Deg2Rad,
+                nativeCameraState.pitchDegrees * Mathf.Deg2Rad,
                 nativeCameraState.distanceToInterestPoint,
                 out positionECEF, out forward, out up);
 
             m_interestPointProvider.UpdateFromNative(nativeCameraState.interestPointECEF);
-
+            
             if (m_coordinateSystem == CoordinateSystem.ECEF)
             {
                 var position = (positionECEF - m_originECEF).ToSingleVector();
@@ -100,7 +125,11 @@ namespace Wrld
                 DoubleVector3 interestPointECEF = m_interestPointProvider.CalculateInterestPoint(streamingCamera, finalOriginECEF);
                 m_nativePluginRunner.StreamResourcesForCamera(streamingCamera, finalOriginECEF, interestPointECEF);
                 m_originECEF = finalOriginECEF; // :TODO: somehow update any other scene-relative cameras - OnRecentreScene event?
+
+                // TODO: Why are we calling UpdateTransforms() an extra time in this branch? (It's already called in Update()).
                 UpdateTransforms();
+
+                // TODO: Why aren't restoring savedPosition here?
             }
             else // if (m_coordinateSystem == CoordinateSystem.UnityWorld)
             {
@@ -117,6 +146,8 @@ namespace Wrld
 
         private void UpdateTransforms()
         {
+            m_buildingsApi.AddNewHighlights();
+
             ITransformUpdateStrategy transformUpdateStrategy;
 
             if (m_coordinateSystem == CoordinateSystem.UnityWorld)
@@ -132,6 +163,7 @@ namespace Wrld
             }
 
             m_nativePluginRunner.UpdateTransforms(transformUpdateStrategy);
+            m_geographicApi.UpdateTransforms(transformUpdateStrategy);
         }
 
         public CameraApi CameraApi
@@ -139,6 +171,22 @@ namespace Wrld
             get
             {
                 return m_cameraController;
+            }
+        }
+
+        public BuildingsApi BuildingsApi
+        {
+            get
+            {
+                return m_buildingsApi;
+            }
+        }
+
+        public GeographicApi GeographicApi
+        {
+            get
+            {
+                return m_geographicApi;
             }
         }
 
@@ -150,9 +198,48 @@ namespace Wrld
             UpdateTransforms();
         }
 
+        public void UpdateCollision(ConfigParams.CollisionConfig collisions)
+        {
+            m_nativePluginRunner.UpdateCollisions(collisions);
+        }
+
+        internal void SetEnabled(bool enabled)
+        {
+            m_mapGameObjectScene.SetEnabled(enabled);
+        }
+
         public void Destroy()
         {
             m_nativePluginRunner.OnDestroy();
+            m_terrainStreamer.Destroy();
+            m_roadStreamer.Destroy();
+            m_buildingStreamer.Destroy();
+            m_highlightStreamer.Destroy();
+        }
+
+        internal Vector3 GeographicToWorldPoint(LatLongAltitude position, Camera camera)
+        {
+            if (m_coordinateSystem == CoordinateSystem.UnityWorld)
+            {
+                return m_frame.ECEFToLocalSpace(position.ToECEF());
+            }
+            else
+            {
+                return (position.ToECEF() - m_originECEF).ToSingleVector();
+            }
+        }
+
+        internal LatLongAltitude WorldToGeographicPoint(Vector3 position, Camera camera)
+        {
+            if (m_coordinateSystem == CoordinateSystem.UnityWorld)
+            {
+                return m_frame.LocalSpaceToLatLongAltitude(position);
+            }
+            else
+            {
+                var ecefPosition = m_originECEF + position;
+                return LatLongAltitude.FromECEF(ecefPosition);
+            }
         }
 
         internal Vector3 GeographicToViewportPoint(LatLongAltitude position, Camera camera)

@@ -48,15 +48,6 @@ namespace Wrld.MapCamera
             {
                 if (distance >= ms_zoomToDistances[zoomLevelIndex])
                 {
-                    if (zoomLevelIndex < ms_zoomToDistances.Length - 1)
-                    {
-                        int nextLevel = zoomLevelIndex + 1;
-                        double interval = ms_zoomToDistances[nextLevel] - ms_zoomToDistances[zoomLevelIndex];
-                        double interp = (distance - ms_zoomToDistances[zoomLevelIndex]) / interval;
-
-                        return zoomLevelIndex;
-                    }
-
                     return zoomLevelIndex;
                 }
             }

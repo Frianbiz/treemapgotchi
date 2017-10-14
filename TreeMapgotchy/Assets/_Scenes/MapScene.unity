@@ -437,6 +437,11 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1607961878 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1834727486734772, guid: a6e752eac10ce46b3bb04f5423bb5ff4,
+    type: 2}
+  m_PrefabInternal: {fileID: 417867439}
 --- !u!1 &1616102922
 GameObject:
   m_ObjectHideFlags: 0
@@ -447,6 +452,7 @@ GameObject:
   - component: {fileID: 1616102924}
   - component: {fileID: 1616102923}
   - component: {fileID: 1616102925}
+  - component: {fileID: 1616102926}
   m_Layer: 0
   m_Name: MainObject
   m_TagString: Untagged
@@ -503,6 +509,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8797ba575be994efd978f095c0ace3b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  coordinateFrame: {fileID: 1386034506}
-  box: {fileID: 470998273}
   initiated: 0
+  treeBad: {fileID: 1607961878}
+  treeMiddle: {fileID: 114418, guid: be878d9ea17907f4a8068678a5ce7908, type: 2}
+  treeGood: {fileID: 114418, guid: 8b2d47fdc2e25ac4f9721480a68bbefa, type: 2}
+--- !u!114 &1616102926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1616102922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8a4c2c6fb88349a88e95d2f9cef7b41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

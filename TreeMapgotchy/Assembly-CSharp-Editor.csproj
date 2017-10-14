@@ -58,6 +58,7 @@
      <Compile Include="Assets\Wrld\Editor\FirstInstallActionsRunner.cs" />
      <Compile Include="Assets\Wrld\Editor\WrldStartupEditor.cs" />
      <Compile Include="Assets\Wrld\Editor\XcodeProjectUpdater.cs" />
+     <None Include="Assets\StreamingAssets\WrldResources\v686.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\md5.cpp.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\rapidjson.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\libcrypto.txt" />
@@ -71,6 +72,7 @@
      <None Include="Assets\Wrld\3rd Party Licenses\libs\pthread.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\poly2tri.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\ANGLE.txt" />
+     <None Include="Assets\StreamingAssets\WrldResources\WelcomeConfig.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\libuv.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\ASIHttpRequest.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\sqlite3.txt" />
@@ -78,7 +80,6 @@
      <None Include="Assets\Wrld\Version\v686.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\httpxx.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\fonts\OpenSans.txt" />
-     <None Include="Assets\StreamingAssets\WrldResources\FrankBold50_A8_icons.fnt" />
      <None Include="Assets\Wrld\AssetData\Windows\FrankBold50_A8_icons.fnt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\rapidxml.txt" />
      <None Include="Assets\Wrld\3rd Party Licenses\libs\libpng.txt" />

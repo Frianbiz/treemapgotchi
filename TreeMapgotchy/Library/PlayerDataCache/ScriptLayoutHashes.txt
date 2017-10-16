@@ -1,4 +1,4 @@
-Android
+iOS
 dc07d7ad69b399a46e92c483bf1c04ca UnityEngine.Analytics.dll:UnityEngine.Analytics.AnalyticsTracker
 05524b8f659e7bfe5756d1335fec24ba UnityEngine.Timeline.dll:UnityEngine.Timeline.ActivationPlayableAsset
 cac917711d0e84d412d48737b6fc9ae7 UnityEngine.Timeline.dll:UnityEngine.Timeline.ActivationTrack
@@ -85,7 +85,6 @@ f61c0793411f10cf5fbfa1473fef5ef2 UnityEngine.UI.dll:UnityEngine.UI.ToggleGroup
 69f3afb2830835c2fce96ccf9ce5c4b6 Assembly-CSharp.dll:.PositionObjectAtLatitudeAndLongitude
 3246e4af086807d0bfc6984a8c244168 Assembly-CSharp.dll:Wrld.MapCamera.CameraJumpBehaviour
 52ada15c31c138a456a5033f0e93d05f Assembly-CSharp.dll:.PositionObjectAtECEFCoordinate
-7588d3bf435d317c557bee23912949f5 Assembly-CSharp.dll:TornadoBanditsStudio.TBS_CameraMovement
 05524b8f659e7bfe5756d1335fec24ba UnityEngine.Timeline.dll:UnityEngine.Timeline.ActivationPlayableAsset
 cac917711d0e84d412d48737b6fc9ae7 UnityEngine.Timeline.dll:UnityEngine.Timeline.ActivationTrack
 706b890efe0a474d76b40e459ddb3e76 UnityEngine.Timeline.dll:UnityEngine.Timeline.AnimationPlayableAsset
